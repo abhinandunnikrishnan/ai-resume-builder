@@ -13,16 +13,16 @@ import Select from '@mui/material/Select';
 import jobRole from '../assets/jobRole.json'
 import jobSkills from '../assets/jobSkills.json'
 import summaries from '../assets/summaries.json'
+import { saveResumeAPI } from '../services/apiService';
+import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 const steps = ['Basic Information', 'Contact Details', 'Educational Details', 'Review & Submit'];
 
-function ResumeInputs() {
+function ResumeInputs({resumeDetails,setResumeDetails}) {
 
-  const [resumeDetails,setResumeDetails]=React.useState({
-    fullName:"",location:"",job:"",email:"",phone:"",linkedin:"",github:"",degree:"",college:"",year:"",skills:[],summary:""
-  })
-  console.log(resumeDetails);
-  
+  // console.log(resumeDetails);
+  const navigate=useNavigate()
   const [activeStep, setActiveStep] = React.useState(0);
 
   const handleNext = () => {
@@ -87,7 +87,7 @@ function ResumeInputs() {
 
       case 3: return(
         <div>
-          <p>Our AI will generateSkills & Summary according to your job role.CLick the <b>Generate AI Skills & Summary</b>button to proceed </p>
+          <p>Our AI will generateSkills & Summary according to your job role.Once the form get submitted ,user will not gwt the chance to update the resume details.if you want to proceed CLick the <b>Generate AI Skills & Summary</b>button  </p>
         </div>
       )
         break;
@@ -100,6 +100,26 @@ function ResumeInputs() {
   const generateSkillAndSummary=()=>{
     setResumeDetails({...resumeDetails,skills:jobSkills[resumeDetails.job],summary:summaries[resumeDetails.job]})
     handleNext()
+  }
+  const handleSaveResume=async()=>{
+    // make api call to save resume it should execute when finish button clicked
+    const {fullName,location,job,email,phone,github,linkedin,degree,college,year,skills,summary}=resumeDetails
+    if(fullName && location && job && email && phone && github && linkedin && degree && college && year && skills.length>0 &&summary){
+      // api call
+      const response =await saveResumeAPI(resumeDetails)
+      console.log(response);
+      if(response.status==201){
+        toast.success("resume added successfuly")
+        const resumeId=response.data.id
+        setTimeout(()=>{ 
+          navigate(`/resumes/${resumeId}`)
+      },2500)
+      
+    }
+  }
+    else{
+      toast.info("please fill the form completely")
+    }
   }
   
   return (
@@ -122,7 +142,7 @@ function ResumeInputs() {
           </Typography>
           <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
             <Box sx={{ flex: '1 1 auto' }} />
-            <Button >
+            <Button onClick={handleSaveResume}>
               FINISH
             </Button>
           </Box>
